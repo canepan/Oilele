@@ -2,6 +2,8 @@ import sys
 from argparse import ArgumentParser
 
 import attr
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 import pygame
 from pdf2image import convert_from_path
 
@@ -38,7 +40,7 @@ class ComicDisplay(object):
     def show(self):
         self.visible = True
         image = self.curr_image
-        surf = pygame.image.fromstring(image.tobytes(), image.size, image.mode).convert()
+        surf = pygame.transform.smoothscale(pygame.image.fromstring(image.tobytes(), image.size, image.mode).convert(), self.screen.get_size())
         self.screen.blit(surf, surf.get_rect())
         pygame.display.flip()
 
@@ -61,7 +63,7 @@ def main(argv=None):
                 looping = False
             elif pyg_event.type == pygame.MOUSEBUTTONDOWN:
                 images.next()
-            else:
+            elif pyg_event.type != pygame.MOUSEMOTION:
                 print(pyg_event)
 
     pygame.quit()
