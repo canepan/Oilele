@@ -17,11 +17,16 @@ class LoggingArgumentParser(ArgumentParser):
         g = self.add_mutually_exclusive_group()
         g.add_argument('-q', '--quiet', action='store_true')
         g.add_argument('-v', '--verbose', action='store_true')
-        self.app_name = app_name
+        if app_name is not None:
+            self.app_name = app_name
+        else:
+            fr = next(sys._current_frames().values().__iter__()).f_back
+            self.app_name = fr.f_globals['__name__'] if fr else None
 
     def parse_args(self, *args, **kwargs):
         cfg = super(LoggingArgumentParser, self).parse_args(*args, **kwargs)
-        cfg.log = logging_utils.get_logger(self.app_name, verbose=cfg.verbose, quiet=cfg.quiet)
+        log_file = f'{self.app_name}.log' if self.app_name else None
+        cfg.log = logging_utils.get_logger(self.app_name, verbose=cfg.verbose, quiet=cfg.quiet, with_file=log_file)
         return cfg
 
 
