@@ -5,6 +5,14 @@ from oilele.oilala import main
 
 
 @pytest.fixture
+def mock_pil_image(monkeypatch):
+    mock_obj = mock.MagicMock(name='PIL.Image')
+    monkeypatch.setattr('oilele.oilala.Image', mock_obj)
+    yield mock_obj
+    print(f'{mock_obj} calls: {mock_obj.mock_calls}')
+
+
+@pytest.fixture
 def mock_pdf2image(monkeypatch):
     mock_obj = mock.MagicMock(name='pdf2image')
     monkeypatch.setattr('oilele.oilala.pdf2image', mock_obj)
@@ -22,7 +30,7 @@ def mock_pygame(monkeypatch):
         mock.Mock(name='event3', type=mock_obj.QUIT),
     )
     mock_obj.event.get.return_value = mock_events
-    monkeypatch.setattr('oilele.oilala.pygame', mock_obj)
+    monkeypatch.setattr('oilele.screen.comic_screen_pygame.pygame', mock_obj)
     yield mock_obj, mock_events
     print(f'{mock_obj} calls: {mock_obj.mock_calls}')
     for mock_event in mock_events:
@@ -30,12 +38,16 @@ def mock_pygame(monkeypatch):
 
 
 @pytest.fixture
+def mock_subprocess(monkeypatch):
+    mock_obj = mock.MagicMock(name='subprocess')
+    monkeypatch.setattr('oilele.screen.comic_screen_chafa.subprocess', mock_obj)
+    yield mock_obj
+    print(f'{mock_obj} calls: {mock_obj.mock_calls}')
+
+
+@pytest.fixture
 def mock_zipfile(monkeypatch):
     mock_obj = mock.MagicMock(name='ZipFile')
-    # filenames = [mock.MagicMock(name='filename1'), mock.MagicMock(name='filename2'), mock.MagicMock(name='filename3')]
-    # filenames[0].endswith.return_value = True
-    # filenames[1].endswith.return_value = False
-    # filenames[2].endswith.return_value = False
     filenames = ('dir1/', 'dir1/filename1', 'dir1/filename2')
     mock_obj.return_value.__enter__.return_value.namelist.return_value = filenames
     monkeypatch.setattr('oilele.oilala.ZipFile', mock_obj)
@@ -43,7 +55,7 @@ def mock_zipfile(monkeypatch):
     print(f'{mock_obj} calls: {mock_obj.mock_calls}')
 
 
-def test_main(mock_pdf2image, mock_pygame):
+def test_main(mock_pil_image, mock_pdf2image, mock_pygame):
     mock_pdf2image.pdfinfo_from_path.return_value = {'Page rot': '3'}
     images = [
         mock.Mock(name='pdf_image1'),
@@ -60,10 +72,11 @@ def test_main(mock_pdf2image, mock_pygame):
     mock_pdf2image.pdfinfo_from_path.assert_called_once_with('test')
     mock_pdf2image.convert_from_path.assert_called_once_with('test')
     mock_pygame[0].display.set_caption.assert_called_with('1/3 - test')
-    mock_pygame[0].image.fromstring.assert_called_with(images[0].tobytes.return_value, images[0].size, images[0].mode)
+    image = images[0].rotate.return_value.convert.return_value
+    mock_pygame[0].image.fromstring.assert_called_with(image.tobytes.return_value, image.size, image.mode)
 
 
-def test_main_cbz(mock_pdf2image, mock_pygame, mock_zipfile):
+def test_main_cbz(mock_pil_image, mock_pdf2image, mock_pygame, mock_zipfile):
     mock_pdf2image.exceptions.PDFPageCountError = Exception
     mock_pdf2image.pdfinfo_from_path.side_effect = mock_pdf2image.exceptions.PDFPageCountError
     main(['test'])

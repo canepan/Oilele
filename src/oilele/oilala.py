@@ -1,23 +1,42 @@
-import attr
-import curses
 import os
-import subprocess
+import shutil
 import sys
-import tempfile
-from abc import ABC, abstractmethod
 from oilele.lib.parse_args import LoggingArgumentParser as ArgumentParser
+from unrar.rarfile import RarFile
 from zipfile import ZipFile
 
+import attr
 import pdf2image
+from PIL import Image
+
+try:
+    from .screen.comic_screen_kivy import ComicScreenKivy
+
+    KIVY_ENABLED = True
+except ImportError:
+    KIVY_ENABLED = False
+
+from .screen.comic_screen import ComicScreen
+
+if shutil.which('chafa'):
+    CHAFA_ENABLED = True
+    from .screen.comic_screen_chafa import ComicScreenChafa
+else:
+    CHAFA_ENABLED = False
 
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
-import pygame  # noqa: E402
+from .screen.comic_screen_pygame import ComicScreenPygame  # noqa: E402
 
 
 def parse_args(argv: list):
     parser = ArgumentParser()
     parser.add_argument('filein')
-    parser.add_argument('--ascii', '-a', action='store_true')
+    if CHAFA_ENABLED or KIVY_ENABLED:
+        g = parser.add_mutually_exclusive_group()
+    if CHAFA_ENABLED:
+        g.add_argument('--ascii', '-a', action='store_true')
+    if KIVY_ENABLED:
+        g.add_argument('--kivy', '-k', action='store_true')
     parser.add_argument('--page', '-p', default=1, type=int, help='Initial page')
     return parser.parse_args(argv)
 
@@ -33,128 +52,18 @@ class OilalaImages(object):
 
     @property
     def curr_image(self):
-        return self.images[self.curr_index]
+        image = self.images[self.curr_index]
+        if self.rotate:
+            image = image.rotate(self.rotate, expand=True)
+        return image
 
     def next(self):
-        self.curr_index += 1
+        self.curr_index = (self.curr_index + 1) % len(self.images)
         return self.curr_image
 
     def prev(self):
-        self.curr_index -= 1
+        self.curr_index = (self.curr_index - 1) % len(self.images)
         return self.curr_image
-
-
-@attr.s
-class ComicScreen(ABC):
-    images_count: int = attr.ib()
-    file_name: str = attr.ib(converter=os.path.basename)
-    _log = attr.ib()
-
-    @abstractmethod
-    def show(self, image, image_index: int, rotate: int = 0):
-        ...
-
-
-@attr.s
-class ComicScreenPygame(ComicScreen):
-    def __attrs_post_init__(self):
-        self._curr_image = None
-        pygame.display.init()
-        self.screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)  # | pygame.HWSURFACE | pygame.DOUBLEBUF)
-        pygame.display.set_caption(f'Loading {self.file_name}...')
-
-    def show(self, image: pygame.surface.Surface, image_index: int, rotate: int = 0):
-        if image != self._curr_image:
-            surf = image
-            self.ratio = surf.get_height() / surf.get_width()
-            if rotate:
-                surf = pygame.transform.rotate(surf, rotate)
-            pygame.display.set_caption(f'{image_index + 1}/{self.images_count} - {self.file_name}')
-            self._curr_image = surf
-        else:
-            surf = self._curr_image
-        self._log.debug(f'Surface: {surf}')
-        width, height = self.screen.get_size()
-        new_size = (self.ratio * height, height)
-        surf = pygame.transform.smoothscale(surf, new_size)
-        self.screen.blit(surf, surf.get_rect())
-        pygame.display.flip()
-
-    def main_loop(self, mgr):
-        mgr.show()
-        looping = True
-        while looping:
-            for pyg_event in pygame.event.get():
-                if is_quit_event(pyg_event):
-                    self._log.debug(pyg_event)
-                    looping = False
-                elif is_next_event(pyg_event):
-                    mgr.next()
-                elif is_prev_event(pyg_event):
-                    mgr.prev()
-                elif pyg_event.type == pygame.VIDEORESIZE:
-                    self._log.debug('VIDEORESIZE')
-                elif pyg_event.type == pygame.WINDOWSIZECHANGED:
-                    self._log.debug('WINDOWSIZECHANGED')
-                    mgr.show(image_changed=False)
-                elif pyg_event.type != pygame.MOUSEMOTION:
-                    self._log.debug(pyg_event)
-
-
-@attr.s
-class ComicScreenChafa(ComicScreen):
-    def __attrs_post_init__(self):
-        self._curr_image = None
-
-    def show(self, image, image_index: int, rotate: int = 0):
-        if rotate:
-            image = image.rotate(rotate)
-        with tempfile.NamedTemporaryFile(suffix='.png') as image_file:
-            try:
-                image.save(image_file.name)
-            except Exception as e:
-                pygame.image.save(image, image_file.name)
-            self._log.debug(f'Saved {image_file.name}')
-            # curses.setsyx(0, 0)
-            subprocess.run(
-                ['chafa', '-f', 'sixels', '--center=on', '--margin-bottom=1', '--polite=off', image_file.name]
-            )
-        self._log.info(f'{image_index + 1}/{self.images_count} - {self.file_name}')
-
-    def main_loop_base(self, mgr):
-        mgr.show()
-        looping = True
-        while looping:
-            key_event = input()
-            if key_event == 'q':
-                looping = False
-            elif key_event == 'n' or key_event == '':
-                mgr.next()
-            elif key_event == 'p':
-                mgr.prev()
-            else:
-                self._log.info(key_event)
-
-    def main_loop(self, mgr):
-        try:
-            curses.wrapper(self._manage_keys, mgr)
-        except Exception as e:
-            self._log.debug(f'Unable to use curses: {e}')
-            self.main_loop_base(mgr)
-
-    def _manage_keys(self, stdscr, mgr):
-        mgr.show()
-        looping = True
-        while looping:
-            key_event = stdscr.getkey()
-            if key_event == 'q':
-                looping = False
-            elif key_event == 'n':
-                mgr.next()
-            elif key_event == 'p':
-                mgr.prev()
-            else:
-                self._log.info(key_event)
 
 
 @attr.s
@@ -162,18 +71,15 @@ class ComicManager(object):
     screen: ComicScreen = attr.ib()
     images: OilalaImages = attr.ib()
     log = attr.ib()
+    start_page: int = attr.ib(default=1)
     visible: bool = attr.ib(default=False)
-    rotate: int = attr.ib(converter=int, default=0)
+
+    def __attrs_post_init__(self):
+        self.images.curr_index = self.start_page - 1
 
     @property
     def curr_image(self):
-        image = self.images.curr_image
-        if pygame.get_init():
-            try:
-                return pygame.image.fromstring(image.tobytes(), image.size, image.mode).convert()
-            except Exception as e:
-                self.log.debug(e)
-        return image
+        return self.images.curr_image
 
     def next(self):
         self.images.next()
@@ -187,48 +93,55 @@ class ComicManager(object):
 
     def show(self, image_changed=True):
         self.visible = True
-        return self.screen.show(self.curr_image, self.images.curr_index, self.images.rotate)
+        return self.screen.show(self.curr_image, self.images.curr_index)
 
 
-@attr.s
-class ComicManagerPil(ComicManager):
-    @property
-    def curr_image(self):
-        image = self.images.curr_image
-        self.log.debug(f'Image: {image}')
-        return pygame.image.fromstring(image.tobytes(), image.size, image.mode).convert()
+def images_from_pdf(file_name: str, log) -> OilalaImages:
+    pdf_info = pdf2image.pdfinfo_from_path(file_name)
+    log.debug(f'pdf_info: {pdf_info}')
+    rotate = pdf_info.get('Page rot')
+    pdf_images = pdf2image.convert_from_path(file_name)
+    # see https://stackoverflow.com/questions/67103934 for the mypy issue
+    return OilalaImages(pdf_images, log=log, file_name=file_name, rotate=rotate)  # type: ignore
 
 
-def is_mouse_or_key(pyg_event, mouse_button, key) -> bool:
-    return (pyg_event.type == pygame.MOUSEBUTTONDOWN and pyg_event.button == mouse_button) or (
-        pyg_event.type == pygame.KEYDOWN and pyg_event.key == key
-    )
+def images_from_rar_archive(file_name: str, log) -> OilalaImages:
+    images_list = list()
+    with RarFile(file_name, 'r') as archive_file:
+        for image_name in sorted(n for n in archive_file.namelist() if not n.endswith('/')):
+            try:
+                log.debug(image_name)
+                images_list.append(Image.open(archive_file.open(image_name, 'r')))
+            except Exception as e:
+                log.exception(e)
+                log.error(f'Error while adding {image_name} as an image from {file_name}: {e}')
+    # see https://stackoverflow.com/questions/67103934 for the mypy issue
+    return OilalaImages(images_list, log=log, file_name=file_name)  # type: ignore
 
 
-def is_next_event(pyg_event) -> bool:
-    return is_mouse_or_key(pyg_event, 1, pygame.K_RIGHT)
-
-
-def is_prev_event(pyg_event) -> bool:
-    return is_mouse_or_key(pyg_event, 3, pygame.K_LEFT)
-
-
-def is_quit_event(pyg_event) -> bool:
-    return pyg_event.type == pygame.QUIT or getattr(pyg_event, 'key', None) == pygame.K_q
-
-
-def images_from_archive(file_name: str, log) -> list:
+def images_from_zip_archive(file_name: str, log) -> OilalaImages:
     images_list = list()
     with ZipFile(file_name, 'r') as archive_file:
         for image_name in sorted(n for n in archive_file.namelist() if not n.endswith('/')):
             try:
                 log.debug(image_name)
-                images_list.append(pygame.image.load(archive_file.open(image_name, 'r')))
-            # except PIL.UnidentifiedImageError as e:
+                images_list.append(Image.open(archive_file.open(image_name, 'r')))
             except Exception as e:
                 log.exception(e)
                 log.error(f'Error while adding {image_name} as an image from {file_name}: {e}')
-    return images_list
+    # see https://stackoverflow.com/questions/67103934 for the mypy issue
+    return OilalaImages(images_list, log=log, file_name=file_name)  # type: ignore
+
+
+def images_from_archive(file_name: str, log) -> OilalaImages:
+    for extractor in (images_from_pdf, images_from_zip_archive, images_from_rar_archive):
+        try:
+            images_list = extractor(file_name, log)
+            return images_list
+        except Exception as e:
+            log.debug(f'Error while opening {file_name} via {extractor}: {e}')
+    # see https://stackoverflow.com/questions/67103934 for the mypy issue
+    return OilalaImages(list(), log, file_name=file_name)  # type: ignore
 
 
 def main(argv=None):
@@ -240,19 +153,21 @@ def main(argv=None):
         pdf_info = pdf2image.pdfinfo_from_path(cfg.filein)
         cfg.log.debug(f'pdf_info: {pdf_info}')
         rotate = pdf_info.get('Page rot')
-        images = OilalaImages(pdf2image.convert_from_path(cfg.filein), log=cfg.log, file_name=cfg.filein, curr_index=cfg.page - 1, rotate=rotate)
+        pdf_images = pdf2image.convert_from_path(cfg.filein)
+        images = OilalaImages(pdf_images, log=cfg.log, file_name=cfg.filein, rotate=rotate)
     except pdf2image.exceptions.PDFPageCountError as e:
         cfg.log.debug(e)
-        images = OilalaImages(images_from_archive(cfg.filein, cfg.log), cfg.log, file_name=cfg.filein, curr_index=cfg.page - 1)
-    if cfg.ascii:
+        images = images_from_archive(cfg.filein, cfg.log)
+        # images = OilalaImages(pyg_images, cfg.log, file_name=cfg.filein)
+    if CHAFA_ENABLED and cfg.ascii:
         screen = ComicScreenChafa(images_count=len(images.images), file_name=cfg.filein, log=cfg.log)
+    elif KIVY_ENABLED and cfg.kivy:
+        screen = ComicScreenKivy(images_count=len(images.images), file_name=cfg.filein, log=cfg.log)
     else:
         screen = ComicScreenPygame(images_count=len(images.images), file_name=cfg.filein, log=cfg.log)
-    mgr = ComicManager(screen, images, cfg.log)
 
+    mgr = ComicManager(screen, images, cfg.log, start_page=cfg.page)
     screen.main_loop(mgr)
-
-    pygame.quit()
 
 
 if __name__ == '__main__':
