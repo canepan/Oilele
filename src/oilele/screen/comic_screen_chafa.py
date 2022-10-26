@@ -11,15 +11,17 @@ from .comic_screen import ComicScreen
 class ComicScreenChafa(ComicScreen):
     def __attrs_post_init__(self):
         self._curr_image = None
+        self.stdscr = None
 
     def show(self, image, image_index: int):
+        title = f'{image_index + 1}/{self.images_count} - {self.file_name}'
+        self._log.info(title)
         with tempfile.NamedTemporaryFile(suffix='.png') as image_file:
             image.save(image_file.name)
             self._log.debug(f'Saved {image_file.name}')
             subprocess.run(
                 ['chafa', '-f', 'sixels', image_file.name]
             )
-        self._log.info(f'{image_index + 1}/{self.images_count} - {self.file_name}')
 
     def main_loop_base(self, mgr):
         mgr.show()
@@ -43,11 +45,14 @@ class ComicScreenChafa(ComicScreen):
             self.main_loop_base(mgr)
 
     def _manage_keys(self, stdscr, mgr):
-        mgr.show()
+        self.stdscr = stdscr
+        curses.curs_set(0)
         looping = True
+        # make sure the first image is shown
+        curses.ungetch(curses.KEY_RESIZE)
         while looping:
             key_event = stdscr.getkey()
-            if key_event == 'q':
+            if key_event in ('q',):
                 looping = False
             elif key_event in ('n', 'd', 'KEY_RIGHT'):
                 mgr.next()
