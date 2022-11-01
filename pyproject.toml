@@ -18,4 +18,4 @@ addopts = "--mypy"
 addopts = "--flake8"
 
 [tool.pytest-enabler.cov]
-addopts = "--cov"
+addopts = "--cov=src"
