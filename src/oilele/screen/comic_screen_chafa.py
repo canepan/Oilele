@@ -9,18 +9,21 @@ from .comic_screen import ComicScreen
 
 @attr.s
 class ComicScreenChafa(ComicScreen):
+    output_format: str = attr.ib(default='sixels')
+
     def __attrs_post_init__(self):
         self._curr_image = None
         self.stdscr = None
 
     def show(self, image, image_index: int):
         title = f'{image_index + 1}/{self.images_count} - {self.file_name}'
-        self._log.info(title)
+        screen_size = self.stdscr.getmaxyx()
         with tempfile.NamedTemporaryFile(suffix='.png') as image_file:
             image.save(image_file.name)
             self._log.debug(f'Saved {image_file.name}')
+            self._log.info(title)
             subprocess.run(
-                ['chafa', '-f', 'sixels', image_file.name]
+                ['chafa', '-f', self.output_format, '--size', f'{screen_size[1]}x{screen_size[0] - 2}', image_file.name]
             )
 
     def main_loop_base(self, mgr):

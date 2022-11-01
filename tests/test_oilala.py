@@ -30,6 +30,7 @@ def mock_pygame(monkeypatch):
         mock.Mock(name='event3', type=mock_obj.QUIT),
     )
     mock_obj.event.get.return_value = mock_events
+    mock_obj.vernum.major = 2
     monkeypatch.setattr('oilele.screen.comic_screen_pygame.pygame', mock_obj)
     yield mock_obj, mock_events
     print(f'{mock_obj} calls: {mock_obj.mock_calls}')
@@ -55,7 +56,9 @@ def mock_zipfile(monkeypatch):
     print(f'{mock_obj} calls: {mock_obj.mock_calls}')
 
 
-def test_main(mock_pil_image, mock_pdf2image, mock_pygame):
+@pytest.mark.parametrize('pygame_version', (1, 2))
+def test_main(mock_pil_image, mock_pdf2image, mock_pygame, pygame_version):
+    mock_pygame[0].vernum.major = pygame_version
     mock_pdf2image.pdfinfo_from_path.return_value = {'Page rot': '3'}
     images = [
         mock.Mock(name='pdf_image1'),

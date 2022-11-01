@@ -40,7 +40,9 @@ class ComicScreenPygame(ComicScreen):
             self._curr_scr_image = image
         else:
             image = self._curr_scr_image
+        self._log.debug(f'Thumbnail for: {image}')
         image.thumbnail(self.screen.get_size())
+        self._log.debug(f'New size: {image.size} (screen: {self.screen.get_size()})')
         surf = pygame.image.fromstring(image.tobytes(), image.size, image.mode).convert()
         self._log.debug(f'Surface: {surf}')
         self.screen.blit(surf, surf.get_rect())
@@ -58,9 +60,12 @@ class ComicScreenPygame(ComicScreen):
                     mgr.next()
                 elif is_prev_event(pyg_event):
                     mgr.prev()
-                elif pyg_event.type == pygame.VIDEORESIZE:
+                elif pygame.vernum.major == 1 and pyg_event.type == pygame.VIDEORESIZE:
                     self._log.debug('VIDEORESIZE')
-                elif pyg_event.type == pygame.WINDOWSIZECHANGED:
+                    self._log.debug(pyg_event)
+                    self.screen = pygame.display.set_mode(pyg_event.dict['size'], pygame.RESIZABLE)
+                    mgr.show(image_changed=True)
+                elif pygame.vernum.major > 1 and pyg_event.type == pygame.WINDOWSIZECHANGED:
                     self._log.debug('WINDOWSIZECHANGED')
                     mgr.show(image_changed=False)
                 elif pyg_event.type != pygame.MOUSEMOTION:
