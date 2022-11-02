@@ -23,7 +23,7 @@ try:
     from .screen.comic_screen_inky import ComicScreenInky
 
     INKY_ENABLED = True
-    SCREENS['inky'] = ComicScreenInky
+    SCREENS['inky'] = ComicScreenInky  # type:ignore
 except ImportError as e:
     INKY_ENABLED = False
     print(e)
@@ -32,7 +32,7 @@ try:
     from .screen.comic_screen_kivy import ComicScreenKivy
 
     KIVY_ENABLED = True
-    SCREENS['kivy'] = ComicScreenKivy
+    SCREENS['kivy'] = ComicScreenKivy  # type:ignore
 except ImportError:
     KIVY_ENABLED = False
 
@@ -40,28 +40,21 @@ if shutil.which('chafa'):
     from .screen.comic_screen_chafa import ComicScreenChafa
 
     CHAFA_ENABLED = True
-    SCREENS['ascii'] = ComicScreenChafa
+    SCREENS['ascii'] = ComicScreenChafa  # type:ignore
 else:
     CHAFA_ENABLED = False
 
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 from .screen.comic_screen_pygame import ComicScreenPygame  # noqa: E402
 
-# SCREENS['pygame'] = ComicScreenPygame
-
 
 def parse_args(argv: list):
     parser = ArgumentParser()
     parser.add_argument('filein')
-    # if CHAFA_ENABLED or KIVY_ENABLED:
     if SCREENS:
         g = parser.add_mutually_exclusive_group()
     for k in SCREENS:
         g.add_argument(f'--{k}', f'-{k.replace("-", "")[0].upper()}', action='store_true')
-    # if CHAFA_ENABLED:
-    #     g.add_argument('--ascii', '-a', action='store_true')
-    # if KIVY_ENABLED:
-    #     g.add_argument('--kivy', '-k', action='store_true')
     parser.add_argument('--page', '-p', default=1, type=int, help='Initial page')
     return parser.parse_args(argv)
 
@@ -191,11 +184,6 @@ def main(argv=None):
     for k, m in SCREENS.items():
         if getattr(cfg, k, False):
             screen = m(images_count=len(images.images), file_name=cfg.filein, log=cfg.log)
-    # if CHAFA_ENABLED and cfg.ascii:
-    #     screen = ComicScreenChafa(images_count=len(images.images), file_name=cfg.filein, log=cfg.log)
-    # elif KIVY_ENABLED and cfg.kivy:
-    #     screen = ComicScreenKivy(images_count=len(images.images), file_name=cfg.filein, log=cfg.log)
-    # else:
     if screen is None:
         screen = ComicScreenPygame(images_count=len(images.images), file_name=cfg.filein, log=cfg.log)
 

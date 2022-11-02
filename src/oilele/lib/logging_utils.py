@@ -21,7 +21,7 @@ class MaxLevelFilter(logging.Filter):
 def _stream_handler(logstream, loglevel, logname, logfilters=None) -> logging.Handler:
     handler = logging.StreamHandler(logstream)
     handler.setLevel(loglevel)
-    handler.set_name(logname)
+    handler.set_name(logname)  # type:ignore
     for logfilter in logfilters or []:
         handler.addFilter(logfilter)
     return handler
@@ -58,7 +58,7 @@ def get_logger(app_name: str, verbose: bool, quiet: bool, with_file: str = None)
     if with_file:
         logfile = logging.FileHandler(with_file)
         logfile.setLevel(logging.DEBUG)
-        logfile.set_name('logfile')
+        logfile.set_name('logfile')  # type:ignore
         log.addHandler(logfile)
         logfile.setFormatter(LOG_FORMATTER)
         log.setLevel(logging.DEBUG)
