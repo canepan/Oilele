@@ -24,8 +24,7 @@ try:
 
     INKY_ENABLED = True
     SCREENS['inky'] = ComicScreenInky  # type:ignore
-# GPIO reports a RuntimeError if imported on a non raspberry PI host
-except (ImportError, RuntimeError) as e:
+except ImportError as e:
     INKY_ENABLED = False
     print(e)
 

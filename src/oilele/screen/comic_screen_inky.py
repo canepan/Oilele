@@ -2,7 +2,12 @@ import signal
 
 import attr
 import inky
-import RPi.GPIO as GPIO
+
+try:
+    import RPi.GPIO as GPIO
+# GPIO reports a RuntimeError if imported on a non raspberry PI host
+except RuntimeError as e:
+    raise ImportError(f'Unable to import GPIO: {e}')
 from PIL import Image
 
 from .comic_screen import ComicScreen
