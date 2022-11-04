@@ -44,8 +44,10 @@ Install
 
 The usual `pip` should work, with the following options:
 
-[inky]  to enable Raspberry GPIO Inky output
-[rar]   to be able to open `cbr` archives (requires librar on the O.S.)
+[inky]
+  to enable Raspberry GPIO Inky output
+[rar]
+  to be able to open `cbr` archives (requires librar on the O.S.)
 
 Usage
 =====
