@@ -27,11 +27,13 @@
 Oilele comic viewer
 ======
 The project aims to build a Python comic viewer (PDF, CBZ, CBR supported) with multiple output options.
+
 As of today, the output can be sent to:
+
 * terminal (via Chafa_)
 * anything pygame_ supports (i.e.: SDL/OpenGL)
 * `Inky paper LCD`_ (on RaspberryPI)
 
 .. _Chafa: https://hpjansson.org/chafa/
 .. _pygame: https://www.pygame.org
-.. _inky: https://github.com/pimoroni/inky
+.. _Inky paper LCD: https://github.com/pimoroni/inky
