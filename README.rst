@@ -30,10 +30,32 @@ The project aims to build a Python comic viewer (PDF, CBZ, CBR supported) with m
 
 As of today, the output can be sent to:
 
-* terminal (via Chafa_)
 * anything pygame_ supports (i.e.: SDL/OpenGL)
+* terminal (via Chafa_)
 * `Inky paper LCD`_ (on RaspberryPI)
 
 .. _Chafa: https://hpjansson.org/chafa/
-.. _pygame: https://www.pygame.org
 .. _Inky paper LCD: https://github.com/pimoroni/inky
+.. _pygame: https://www.pygame.org
+
+
+Install
+=====
+
+The usual `pip` should work, with the following options:
+
+[inky]  to enable Raspberry GPIO Inky output
+[rar]   to be able to open `cbr` archives (requires librar on the O.S.)
+
+Usage
+=====
+
+Run with (can replace `oilala` with `faccela_vedé` or `faccela_toccá`):
+::
+  oilala <filename>
+  (opens <filename> via pygame)
+  oilala -A <filename> -v
+  (opens <filename> with Chafa, verbose output)
+  oilala -I <filename> -p 32
+  (opens <filename> at page 32 on Inky impressions)
+
