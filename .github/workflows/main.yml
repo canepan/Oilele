@@ -45,7 +45,8 @@ jobs:
         - -dev
         platform:
         - ubuntu-latest
-        - macos-latest
+        # macos and windows lack support for GPIO (i.e.: linux/spi/spidev.h)
+        # - macos-latest
         # - windows-latest
         # include:
         # - python: pypy3.9
