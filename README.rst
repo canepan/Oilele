@@ -1,13 +1,15 @@
-.. image:: https://img.shields.io/pypi/v/skeleton.svg
-   :target: `PyPI link`_
+.. image:: https://img.shields.io/github/v/tag/canepan/Oilele?style=plastic
+   :alt: GitHub tag (latest by date)
+   :target: `GitHub link`_
 
-.. image:: https://img.shields.io/pypi/pyversions/skeleton.svg
-   :target: `PyPI link`_
+.. image:: https://img.shields.io/badge/python-3.7+-blue.svg
+   :target: `GitHub link`_
 
-.. _PyPI link: https://pypi.org/project/skeleton
+.. .. _PyPI link: https://pypi.org/project/Oilala
+.. _GitHub link: https://github.com/canepan/Oilele
 
-.. image:: https://github.com/jaraco/skeleton/workflows/tests/badge.svg
-   :target: https://github.com/jaraco/skeleton/actions?query=workflow%3A%22tests%22
+.. image:: https://github.com/canepan/Oilele/workflows/tests/badge.svg
+   :target: https://github.com/canepan/Oilele/actions?query=workflow%3A%22tests%22
    :alt: tests
 
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
@@ -17,5 +19,19 @@
 .. .. image:: https://readthedocs.org/projects/skeleton/badge/?version=latest
 ..    :target: https://skeleton.readthedocs.io/en/latest/?badge=latest
 
-.. image:: https://img.shields.io/badge/skeleton-2022-informational
-   :target: https://blog.jaraco.com/skeleton
+.. .. image:: https://img.shields.io/badge/Oilele-2022-informational
+..    :target: https://blog.jaraco.com/skeleton
+
+
+======
+Oilele comic viewer
+======
+The project aims to build a Python comic viewer (PDF, CBZ, CBR supported) with multiple output options.
+As of today, the output can be sent to:
+* terminal (via Chafa_)
+* anything pygame_ supports (i.e.: SDL/OpenGL)
+* `Inky paper LCD`_ (on RaspberryPI)
+
+.. _Chafa: https://hpjansson.org/chafa/
+.. _pygame: https://www.pygame.org
+.. _inky: https://github.com/pimoroni/inky
