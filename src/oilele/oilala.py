@@ -8,8 +8,10 @@ try:
     from unrar.rarfile import RarFile
 
     UNRAR_ENABLED = True
-except (ImportError, LookupError):
+except (ImportError, LookupError) as e:
     UNRAR_ENABLED = False
+    if '-v' in sys.argv or '--verbose' in sys.argv:
+        print(e)
 from zipfile import ZipFile
 
 import attr
@@ -26,15 +28,18 @@ try:
     SCREENS['inky'] = ComicScreenInky  # type:ignore
 except ImportError as e:
     INKY_ENABLED = False
-    print(e)
+    if '-v' in sys.argv or '--verbose' in sys.argv:
+        print(e)
 
 try:
     from .screen.comic_screen_kivy import ComicScreenKivy
 
     KIVY_ENABLED = True
     SCREENS['kivy'] = ComicScreenKivy  # type:ignore
-except ImportError:
+except ImportError as e:
     KIVY_ENABLED = False
+    if '-v' in sys.argv or '--verbose' in sys.argv:
+        print(e)
 
 if shutil.which('chafa'):
     from .screen.comic_screen_chafa import ComicScreenChafa
