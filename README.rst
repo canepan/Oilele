@@ -23,9 +23,9 @@
 ..    :target: https://blog.jaraco.com/skeleton
 
 
-======
+===================
 Oilele comic viewer
-======
+===================
 The project aims to build a Python comic viewer (PDF, CBZ, CBR supported) with multiple output options.
 
 As of today, the output can be sent to:
@@ -40,7 +40,7 @@ As of today, the output can be sent to:
 
 
 Install
-=====
+=======
 
 The usual `pip` should work, with the following options:
 
@@ -54,6 +54,7 @@ Usage
 
 Run with (can replace `oilala` with `faccela_vedé` or `faccela_toccá`):
 ::
+
   oilala <filename>
   (opens <filename> via pygame)
   oilala -A <filename> -v
