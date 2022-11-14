@@ -47,9 +47,9 @@ Install
 
 The command `pip install Oilele` should work, with the following options:
 
-[rpi]
-  to enable Raspberry GPIO Inky output
 [inky]
+  to enable Raspberry GPIO Inky output
+[rar]
   to be able to open `cbr` archives (requires librar on the O.S.)
 
 To install with all dependencies::
