@@ -28,7 +28,7 @@ Oilele comic viewer
 ===================
 The project aims to build a Python comic viewer (PDF, CBZ, CBR supported) with multiple output options.
 
-PDF reading is available through poppler_
+PDF reading is available through pdf2image_ (which depends on poppler_)
 
 As of today, the output can be sent to:
 
@@ -36,6 +36,7 @@ As of today, the output can be sent to:
 * terminal (via Chafa_)
 * `Inky paper LCD`_ (on RaspberryPI)
 
+.. _pdf2image: https://github.com/Belval/pdf2image
 .. _poppler: https://poppler.freedesktop.org/
 .. _Chafa: https://hpjansson.org/chafa/
 .. _Inky paper LCD: https://github.com/pimoroni/inky
