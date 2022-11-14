@@ -42,18 +42,21 @@ As of today, the output can be sent to:
 Install
 =======
 
-The usual `pip` should work, with the following options:
+The usual `pip install Oilele` should work, with the following options:
 
-[inky]
+[rpi]
   to enable Raspberry GPIO Inky output
-[rar]
+[inky]
   to be able to open `cbr` archives (requires librar on the O.S.)
+
+To install with all dependencies::
+
+  pip install Oilele[rar,inky]
 
 Usage
 =====
 
-Run with (can replace `oilala` with `faccela_vedé` or `faccela_toccá`):
-::
+Run with (can replace `oilala` with `faccela_vedé` or `faccela_toccá`)::
 
   oilala <filename>
   (opens <filename> via pygame)
