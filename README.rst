@@ -28,12 +28,15 @@ Oilele comic viewer
 ===================
 The project aims to build a Python comic viewer (PDF, CBZ, CBR supported) with multiple output options.
 
+PDF reading is available through poppler_
+
 As of today, the output can be sent to:
 
 * anything pygame_ supports (i.e.: SDL/OpenGL)
 * terminal (via Chafa_)
 * `Inky paper LCD`_ (on RaspberryPI)
 
+.. _poppler: https://poppler.freedesktop.org/
 .. _Chafa: https://hpjansson.org/chafa/
 .. _Inky paper LCD: https://github.com/pimoroni/inky
 .. _pygame: https://www.pygame.org
@@ -42,7 +45,7 @@ As of today, the output can be sent to:
 Install
 =======
 
-The usual `pip install Oilele` should work, with the following options:
+The command `pip install Oilele` should work, with the following options:
 
 [rpi]
   to enable Raspberry GPIO Inky output
@@ -52,6 +55,13 @@ The usual `pip install Oilele` should work, with the following options:
 To install with all dependencies::
 
   pip install Oilele[rar,inky]
+
+Dependencies can usually installed by your favorite package manager:
+
+Debian based
+ `apt install poppler chafa`
+Mac
+  `brew install poppler chafa`
 
 Usage
 =====
@@ -64,4 +74,21 @@ Run with (can replace `oilala` with `faccela_vedé` or `faccela_toccá`)::
   (opens <filename> with Chafa, verbose output)
   oilala -I <filename> -p 32
   (opens <filename> at page 32 on Inky impressions)
+
+Notes and dependencies
+======================
+
+The `-A` option (`--ascii`) is only available if you have Chafa_ installed (minimum 1.2 which has the `-f` option).
+Alternatives to pdf2image (which depends on poppler) being considered:
+
+* PyMuPDF_, it includes support for CBZ and some epub formats. Depends on the MuPDF_ library
+* pikepdf_, depends on the QPDF_ CLI
+
+.. _PyMuPDF: https://github.com/pymupdf/PyMuPDF
+.. _MuPDF: https://mupdf.com/
+.. _pikepdf: https://github.com/pikepdf/pikepdf
+.. _QPDF: https://github.com/qpdf/qpdf
+
+
+Please report any problem via the GitHub `issues` feature, with possible solutions, or even pull requests if appropriate.
 
