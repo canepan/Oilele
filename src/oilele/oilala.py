@@ -57,6 +57,7 @@ def parse_args(argv: list):
     parser = ArgumentParser()
     parser.add_argument('filein')
     if SCREENS:
+        parser.add_argument('--output-format', default=None)
         g = parser.add_mutually_exclusive_group()
     for k in SCREENS:
         g.add_argument(f'--{k}', f'-{k.replace("-", "")[0].upper()}', action='store_true')
@@ -188,7 +189,11 @@ def main(argv=None):
     screen = None
     for k, m in SCREENS.items():
         if getattr(cfg, k, False):
-            screen = m(images_count=len(images.images), file_name=cfg.filein, log=cfg.log)
+            extra_args = {}
+            for key in m.extra_options:
+                if getattr(cfg, key, None) is not None:
+                    extra_args[key] = getattr(cfg, key)
+            screen = m(images_count=len(images.images), file_name=cfg.filein, log=cfg.log, **extra_args)
     if screen is None:
         screen = ComicScreenPygame(images_count=len(images.images), file_name=cfg.filein, log=cfg.log)
 

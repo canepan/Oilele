@@ -9,6 +9,7 @@ class ComicScreen(ABC):
     images_count: int = attr.ib()
     file_name: str = attr.ib(converter=os.path.basename)
     _log = attr.ib()
+    extra_options = []
 
     @abstractmethod
     def show(self, image, image_index: int):

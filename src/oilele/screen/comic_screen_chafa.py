@@ -10,6 +10,7 @@ from .comic_screen import ComicScreen
 @attr.s
 class ComicScreenChafa(ComicScreen):
     output_format: str = attr.ib(default='sixels')
+    extra_options = ['output_format']
 
     def __attrs_post_init__(self):
         self._curr_image = None
