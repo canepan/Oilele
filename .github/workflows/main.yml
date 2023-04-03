@@ -8,7 +8,7 @@ env:
   # interpret the value differently. For some, just being set is sufficient.
   # For others, it must be a non-zero integer. For yet others, being set
   # to a non-empty value is sufficient.
-  FORCE_COLOR: -106
+  FORCE_COLOR: yes
   # MyPy's color enforcement (must be a non-zero number)
   MYPY_FORCE_COLOR: -42
   # Recognized by the `py` package, dependency of `pytest` (must be "1")
