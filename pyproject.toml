@@ -11,7 +11,7 @@ name = "Oilele"
 authors = [
 	{ name = "Nicola Canepa", email = "canne74@gmail.com" },
 ]
-description = Comic book visualizer
+description = "Comic book visualizer"
 readme = "README.rst"
 classifiers = [
 	"Development Status :: 5 - Production/Stable",
