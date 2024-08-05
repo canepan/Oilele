@@ -1,10 +1,63 @@
 [build-system]
-requires = ["setuptools>=56", "setuptools_scm[toml]>=3.4.1"]
+requires = ["setuptools>=61.2", "setuptools_scm[toml]>=3.4.1"]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
 skip-string-normalization = true
 line-length = 120
+
+[project]
+name = "Oilele"
+authors = [
+	{ name = "Nicola Canepa", email = "canne74@gmail.com" },
+]
+description = Comic book visualizer
+readme = "README.rst"
+classifiers = [
+	"Development Status :: 5 - Production/Stable",
+	"Intended Audience :: Developers",
+	"License :: OSI Approved :: MIT License",
+	"Programming Language :: Python :: 3",
+	"Programming Language :: Python :: 3 :: Only",
+]
+requires-python = ">=3.8"
+# does pyproject support flavours?
+# rar =
+#     unrar
+# inky =
+#     inky
+#     # On RaspberryPi, it only works using the OS provided one - 20221101
+#     numpy
+#     RPi.GPIO
+dependencies = [
+]
+dynamic = ["version"]
+
+[project.urls]
+Source = "https://github.com/canepan/Oilele"
+
+[project.optional-dependencies]
+test = [
+	# upstream
+	"pytest >= 6, != 8.1.*",
+	"pytest-checkdocs >= 2.4",
+	"pytest-cov",
+	"pytest-mypy",
+	"pytest-enabler >= 2.2",
+	"pytest-ruff >= 0.2.1; sys_platform != 'cygwin'",
+
+	# local
+]
+doc = [
+	# upstream
+	"sphinx >= 3.5",
+	"jaraco.packaging >= 9.3",
+	"rst.linker >= 1.9",
+	"furo",
+	"sphinx-lint",
+
+	# local
+]
 
 [tool.setuptools_scm]
 write_to = "src/oilele/_version.py"
