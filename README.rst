@@ -8,7 +8,7 @@
 .. image:: https://img.shields.io/badge/python-3.8+-blue.svg
    :target: `GitHub link`_
 
-.. .. _PyPI link: https://pypi.org/project/Oilala
+.. _PyPI link: https://pypi.org/project/Oilele
 .. _GitHub link: https://github.com/canepan/Oilele
 
 .. image:: https://github.com/canepan/Oilele/workflows/tests/badge.svg
