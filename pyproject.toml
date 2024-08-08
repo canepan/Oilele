@@ -21,15 +21,10 @@ classifiers = [
 	"Programming Language :: Python :: 3 :: Only",
 ]
 requires-python = ">=3.8"
-# does pyproject support flavours?
-# rar =
-#     unrar
-# inky =
-#     inky
-#     # On RaspberryPi, it only works using the OS provided one - 20221101
-#     numpy
-#     RPi.GPIO
 dependencies = [
+    "attrs >= 17.4.0",
+    "pdf2image",
+    "pygame",
 ]
 dynamic = ["version"]
 
@@ -57,6 +52,15 @@ doc = [
 	"sphinx-lint",
 
 	# local
+]
+rar = [
+    "unrar",
+]
+inky = [
+    "inky",
+    # On RaspberryPi, it only works using the OS provided one - 20221101
+    "numpy",
+    "RPi.GPIO",
 ]
 
 [tool.setuptools_scm]
