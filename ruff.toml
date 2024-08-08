@@ -1,3 +1,5 @@
+line-length = 120
+
 [lint]
 extend-select = [
 	"C901",
@@ -27,4 +29,5 @@ ignore = [
 # See https://github.com/jaraco/skeleton/pull/133#issuecomment-2239538373
 preview = true
 # https://docs.astral.sh/ruff/settings/#format_quote-style
+# corresponds to black's "skip-string-normalization"
 quote-style = "preserve"
