@@ -1,4 +1,4 @@
-Welcome to |project| documentation!
+Welcome to |Oilele| documentation!
 ===================================
 
 .. sidebar-links::
@@ -11,7 +11,7 @@ Welcome to |project| documentation!
    history
 
 
-.. automodule:: PROJECT
+.. automodule:: oilele
     :members:
     :undoc-members:
     :show-inheritance:
