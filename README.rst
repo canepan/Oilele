@@ -5,7 +5,7 @@
    :alt: GitHub tag (latest by date)
    :target: `GitHub link`_
 
-.. image:: https://img.shields.io/badge/python-3.7+-blue.svg
+.. image:: https://img.shields.io/badge/python-3.8+-blue.svg
    :target: `GitHub link`_
 
 .. .. _PyPI link: https://pypi.org/project/Oilala
