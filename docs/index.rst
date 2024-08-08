@@ -1,4 +1,4 @@
-Welcome to |Oilele| documentation!
+Welcome to |project| documentation!
 ===================================
 
 .. sidebar-links::
