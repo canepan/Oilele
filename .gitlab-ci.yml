@@ -1,0 +1,61 @@
+# Using the official Python Docker image as default
+image: python:3.11
+
+.tests:
+  stage: Test
+  script:
+    - tox -c tox-gitlab.ini
+  before_script:
+    - python --version
+    - uname -a
+    - apt-get update
+    - apt-get install -y libldap2-dev libsasl2-dev
+    - "[ -r requirements.txt ] && pip install -r requirements.txt"
+    - pip install tox
+
+stages:
+  - Test
+  - Publish
+
+unit_test:
+  extends: .tests
+  coverage: '/^TOTAL.+?(\d+\%)$/'
+  artifacts:
+    paths:
+      - htmlcov/
+
+unit_test:3.11:
+  image: python:3.11
+  extends: .tests
+
+unit_test:3.10:
+  image: python:3.10
+  extends: .tests
+
+unit_test:3.9:
+  image: python:3.9
+  extends: .tests
+
+pages:
+  stage: Publish
+  dependencies:
+    - unit_test
+  script:
+    - mkdir -p public
+    - mv htmlcov public/
+  artifacts:
+    paths:
+      - public/htmlcov
+    expire_in: 30 days
+  only:
+    - master
+
+sast:
+  stage: Test
+  artifacts:
+    paths:
+      - gl-sast-report.json
+
+include:
+  - template: Security/SAST.gitlab-ci.yml
+
