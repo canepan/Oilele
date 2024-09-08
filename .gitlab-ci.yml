@@ -42,7 +42,7 @@ pages:
     - unit_test
   script:
     - mkdir -p public
-    - "[ -r htmlcov ] && mv htmlcov public/"
+    - "[ -r htmlcov ] && mv htmlcov public/ || true"
   artifacts:
     paths:
       - public/htmlcov
