@@ -28,6 +28,11 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[project.scripts]
+oilala = "oilele.oilala:main"
+"faccela_vedé" = "oilele.oilala:main"
+"faccela_toccá" = "oilele.oilala:main"
+
 [project.urls]
 Source = "https://github.com/canepan/Oilele"
 
@@ -60,7 +65,7 @@ inky = [
     "inky",
     # On RaspberryPi, it only works using the OS provided one - 20221101
     "numpy",
-    "RPi.GPIO",
+    "rpi-lgpio",   # was "RPi.GPIO" — broken edge detection on kernel >= 6.6
 ]
 
 [tool.setuptools_scm]
