@@ -24,6 +24,8 @@ class ComicScreenInky(ComicScreen):
 
         try:
             self.inky = inky.auto(verbose=True)
+            if tuple(self.inky.resolution) == (1600, 1200):
+                self.BUTTONS = [5, 6, 25, 24]
         except Exception as e:
             self._log.debug(f'Exception detecting Inky device: {e}. Using Inky7Colour')
             self.inky = inky.Inky7Colour()
