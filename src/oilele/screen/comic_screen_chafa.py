@@ -17,7 +17,7 @@ class ComicScreenChafa(ComicScreen):
         self.stdscr = None
 
     def show(self, image, image_index: int):
-        title = f'{image_index + 1}/{self.images_count} - {self.file_name}'
+        title = f'{image_index + 1}/{self.images_count} - {self.file_name}\033[H'
         screen_size = self.stdscr.getmaxyx()
         with tempfile.NamedTemporaryFile(suffix='.png') as image_file:
             image.save(image_file.name)
