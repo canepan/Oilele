@@ -30,6 +30,11 @@ class ComicScreenInky(ComicScreen):
             self._log.debug(f'Exception detecting Inky device: {e}. Using Inky7Colour')
             self.inky = inky.Inky7Colour()
 
+        self._log.debug(
+            f'Inky device: {type(self.inky).__module__}.{type(self.inky).__name__} '
+            f'resolution={self.inky.resolution} colour={getattr(self.inky, "colour", "?")} '
+            f'buttons={self.BUTTONS}'
+        )
         self.inky_ratio = self._ratio(self.inky.resolution)
 
     # "handle_button" will be called every time a button is pressed
@@ -72,22 +77,30 @@ class ComicScreenInky(ComicScreen):
 
         inky_image = Image.new('RGBA', self.inky.resolution, (0, 0, 0, 0))
         rotation = self._required_rotation(image)
+        self._log.debug(f'source image size={image.size} mode={image.mode} rotation={rotation}')
         if rotation:
             image = image.rotate(rotation, expand=True)
         image.thumbnail(self.inky.resolution)
-        inky_image.paste(
-            image, box=[round(i / 2) for i in (inky_image.size[0] - image.size[0], inky_image.size[1] - image.size[1])]
-        )
-        self._log.debug(f'Resized image: {image.size} -> {inky_image.size}')
-        self.inky.set_image(inky_image, saturation=0.5)
-        self.inky.show()
+        box = [round(i / 2) for i in (inky_image.size[0] - image.size[0], inky_image.size[1] - image.size[1])]
+        inky_image.paste(image, box=box)
+        self._log.debug(f'Resized image: {image.size} -> {inky_image.size}, paste box={box}')
+        try:
+            self._log.debug('calling inky.set_image()')
+            self.inky.set_image(inky_image, saturation=0.5)
+            self._log.debug('set_image() ok; calling inky.show() (this can take tens of seconds)')
+            self.inky.show()
+            self._log.debug('inky.show() completed')
+        except Exception as e:
+            self._log.exception(f'Inky rendering failed at set_image/show: {e}')
+            raise
 
     def main_loop_base(self):
+        self._log.debug('main_loop_base: initial show()')
         self.mgr.show()
         self.looping = True
         while self.looping:
             received_signal = signal.sigwait((signal.SIGUSR1,))
-            self.log._debug(f'{received_signal=}')
+            self._log.debug(f'{received_signal=}')
 
     def main_loop(self, mgr):
         self.mgr = mgr
@@ -96,11 +109,17 @@ class ComicScreenInky(ComicScreen):
         # Buttons connect to ground when pressed, so we should set them up
         # with a "PULL UP", which weakly pulls the input signal to 3.3V.
         GPIO.setup(self.BUTTONS, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        self._log.debug('GPIO.setup() done')
 
         # Loop through out buttons and attach the "handle_button" function to each
         # We're watching the "FALLING" edge (transition from 3.3V to Ground) and
         # picking a generous bouncetime of 250ms to smooth out button presses.
         for pin in self.BUTTONS:
-            GPIO.add_event_detect(pin, GPIO.FALLING, self.handle_button, bouncetime=250)
+            try:
+                GPIO.add_event_detect(pin, GPIO.FALLING, self.handle_button, bouncetime=250)
+                self._log.debug(f'edge detection added for pin {pin}')
+            except Exception as e:
+                self._log.exception(f'add_event_detect failed for pin {pin}: {e}')
 
+        self._log.debug('entering main_loop_base')
         self.main_loop_base()
