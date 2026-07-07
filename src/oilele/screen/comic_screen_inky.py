@@ -1,4 +1,5 @@
 import signal
+import time
 
 import attr
 import inky
@@ -73,7 +74,7 @@ class ComicScreenInky(ComicScreen):
 
     def show(self, image, image_index: int):
         title = f'{image_index + 1}/{self.images_count} - {self.file_name}'
-        self._log.info(title)
+        start = time.monotonic()
 
         inky_image = Image.new('RGBA', self.inky.resolution, (0, 0, 0, 0))
         rotation = self._required_rotation(image)
@@ -93,6 +94,7 @@ class ComicScreenInky(ComicScreen):
         except Exception as e:
             self._log.exception(f'Inky rendering failed at set_image/show: {e}')
             raise
+        self._log.info(f"{title} - {time.monotonic() - start:.1f}s")
 
     def main_loop_base(self):
         self._log.debug('main_loop_base: initial show()')
