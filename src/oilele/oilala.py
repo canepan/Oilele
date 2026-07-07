@@ -54,7 +54,7 @@ from .screen.comic_screen_pygame import ComicScreenPygame  # noqa: E402
 
 
 def parse_args(argv: list):
-    parser = ArgumentParser()
+    parser = ArgumentParser(app_name=__name__)
     parser.add_argument('filein')
     if SCREENS:
         parser.add_argument('--output-format', default=None)
