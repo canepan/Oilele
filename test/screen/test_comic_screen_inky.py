@@ -4,13 +4,7 @@ from unittest.mock import patch
 import pytest
 from PIL import Image
 
-# comic_screen_inky imports RPi.GPIO/inky at module load; on non-Pi hosts that
-# import fails, so skip this module there instead of erroring at collection.
-comic_screen_inky = pytest.importorskip(
-    "oilele.screen.comic_screen_inky",
-    reason="needs RPi.GPIO/inky (Raspberry Pi only)",
-)
-ComicScreenInky = comic_screen_inky.ComicScreenInky
+from oilele.screen.comic_screen_inky import ComicScreenInky
 
 DISPLAY_SIZE = (600, 448)  # a landscape Inky panel
 
