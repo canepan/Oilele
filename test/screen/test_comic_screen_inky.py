@@ -4,14 +4,16 @@ from unittest.mock import patch
 import pytest
 from PIL import Image
 
+# comic_screen_inky now uses gpiozero.Button (not RPi.GPIO); gpiozero imports
+# cleanly on any host, so this import works on x86_64/CI too — giving coverage.
 from oilele.screen.comic_screen_inky import ComicScreenInky
 
 DISPLAY_SIZE = (600, 448)  # a landscape Inky panel
 
 
 @pytest.fixture
-def mock_gpio():
-    with patch("oilele.screen.comic_screen_inky.GPIO") as mock_obj:
+def mock_button():
+    with patch("oilele.screen.comic_screen_inky.Button") as mock_obj:
         yield mock_obj
     print(f"{mock_obj} calls: {mock_obj.mock_calls}")
 
@@ -24,7 +26,7 @@ def mock_inky():
 
 
 @pytest.fixture
-def inky(mock_gpio, mock_inky):
+def inky(mock_button, mock_inky):
     mock_inky.auto.return_value.resolution = DISPLAY_SIZE
     return ComicScreenInky(images_count=3, file_name="test.cbz", log=logging.getLogger(__name__))
 

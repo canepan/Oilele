@@ -65,7 +65,7 @@ inky = [
     "inky",
     # On RaspberryPi, it only works using the OS provided one - 20221101
     "numpy",
-    "rpi-lgpio",   # was "RPi.GPIO" — broken edge detection on kernel >= 6.6
+    "gpiozero",   # buttons; RPi.GPIO/rpi-lgpio fail on kernel >=6.6 / old-style revisions
 ]
 
 [tool.setuptools_scm]

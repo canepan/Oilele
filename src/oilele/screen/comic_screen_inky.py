@@ -1,14 +1,9 @@
-import signal
+import threading
 import time
 
 import attr
 import inky
-
-try:
-    import RPi.GPIO as GPIO
-# GPIO reports a RuntimeError if imported on a non raspberry PI host
-except RuntimeError as e:
-    raise ImportError(f'Unable to import GPIO: {e}')
+from gpiozero import Button
 from PIL import Image
 
 from .comic_screen import ComicScreen
@@ -38,10 +33,8 @@ class ComicScreenInky(ComicScreen):
         )
         self.inky_ratio = self._ratio(self.inky.resolution)
 
-    # "handle_button" will be called every time a button is pressed
-    # It receives one argument: the associated input pin.
-    def handle_button(self, pin: int):
-        label = self.LABELS[self.BUTTONS.index(pin)]
+    # "handle_button" is called every time a button is pressed, with its label.
+    def handle_button(self, label: str):
         if label == 'A':
             self.mgr.next()
         elif label == 'B':
@@ -53,11 +46,10 @@ class ComicScreenInky(ComicScreen):
             self.force_rotation = (rotation + 90) % 360
             self.mgr.show()
         elif label == 'D':
-            self._log.info(f'{label} ({pin}) pressed - stopping')
-            self.looping = False
+            self._log.info(f'{label} pressed - stopping')
+            self._stop.set()
         else:
-            self._log.info(f'{label} ({pin}) pressed')
-        signal.raise_signal(signal.SIGUSR1)
+            self._log.info(f'{label} pressed')
 
     def _ratio(self, size: tuple) -> float:
         """This is to ensure we use the same ratio during calculations"""
@@ -78,50 +70,38 @@ class ComicScreenInky(ComicScreen):
 
         inky_image = Image.new('RGBA', self.inky.resolution, (0, 0, 0, 0))
         rotation = self._required_rotation(image)
-        self._log.debug(f'source image size={image.size} mode={image.mode} rotation={rotation}')
         if rotation:
             image = image.rotate(rotation, expand=True)
         image.thumbnail(self.inky.resolution)
         box = [round(i / 2) for i in (inky_image.size[0] - image.size[0], inky_image.size[1] - image.size[1])]
         inky_image.paste(image, box=box)
-        self._log.debug(f'Resized image: {image.size} -> {inky_image.size}, paste box={box}')
+        self._log.debug(f'Resized image: {image.size} -> {inky_image.size} (rotation={rotation})')
         try:
-            self._log.debug('calling inky.set_image()')
             self.inky.set_image(inky_image, saturation=0.5)
-            self._log.debug('set_image() ok; calling inky.show() (this can take tens of seconds)')
             self.inky.show()
-            self._log.debug('inky.show() completed')
         except Exception as e:
-            self._log.exception(f'Inky rendering failed at set_image/show: {e}')
+            self._log.exception(f'Inky rendering failed: {e}')
             raise
         self._log.info(f"{title} - {time.monotonic() - start:.1f}s")
 
     def main_loop_base(self):
-        self._log.debug('main_loop_base: initial show()')
         self.mgr.show()
-        self.looping = True
-        while self.looping:
-            received_signal = signal.sigwait((signal.SIGUSR1,))
-            self._log.debug(f'{received_signal=}')
+        self._stop.wait()  # block the main thread until a button (D) asks to stop
 
     def main_loop(self, mgr):
         self.mgr = mgr
-        GPIO.setmode(GPIO.BCM)  # Set up RPi.GPIO with the "BCM" numbering scheme
-
-        # Buttons connect to ground when pressed, so we should set them up
-        # with a "PULL UP", which weakly pulls the input signal to 3.3V.
-        GPIO.setup(self.BUTTONS, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        self._log.debug('GPIO.setup() done')
-
-        # Loop through out buttons and attach the "handle_button" function to each
-        # We're watching the "FALLING" edge (transition from 3.3V to Ground) and
-        # picking a generous bouncetime of 250ms to smooth out button presses.
-        for pin in self.BUTTONS:
+        self._stop = threading.Event()
+        # Buttons connect to ground when pressed -> pull_up=True. gpiozero uses
+        # lgpio/gpiod under the hood, so it works on kernel >=6.6 and doesn't
+        # choke on the board's old-style revision code (unlike RPi.GPIO).
+        self._buttons = []
+        for pin, label in zip(self.BUTTONS, self.LABELS):
             try:
-                GPIO.add_event_detect(pin, GPIO.FALLING, self.handle_button, bouncetime=250)
-                self._log.debug(f'edge detection added for pin {pin}')
+                button = Button(pin, pull_up=True)
+                # keep a reference so gpiozero doesn't garbage-collect the pin
+                button.when_pressed = lambda lbl=label: self.handle_button(lbl)
+                self._buttons.append(button)
+                self._log.debug(f'button {label} attached to GPIO{pin}')
             except Exception as e:
-                self._log.exception(f'add_event_detect failed for pin {pin}: {e}')
-
-        self._log.debug('entering main_loop_base')
+                self._log.exception(f'failed to attach button {label} (GPIO{pin}): {e}')
         self.main_loop_base()
