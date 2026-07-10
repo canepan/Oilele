@@ -5,11 +5,15 @@ import tempfile
 import attr
 
 from .comic_screen import ComicScreen
+from .selector import terminal_select
 
 
 @attr.s
 class ComicScreenChafa(ComicScreen):
     output_format: str = attr.ib(default='sixels')
+
+    def select(self, options, title="Choose a file"):
+        return terminal_select(options, title)
     extra_options = ['output_format']
 
     def __attrs_post_init__(self):

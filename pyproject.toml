@@ -25,6 +25,7 @@ dependencies = [
     "attrs >= 17.4.0",
     "pdf2image",
     "pygame",
+    "questionary",
 ]
 dynamic = ["version"]
 

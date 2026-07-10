@@ -3,6 +3,7 @@ import pygame
 import PIL
 
 from .comic_screen import ComicScreen
+from .selector import terminal_select
 
 
 def is_mouse_or_key(pyg_event, mouse_button, key) -> bool:
@@ -31,6 +32,9 @@ class ComicScreenPygame(ComicScreen):
         pygame.display.init()
         self.screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)  # | pygame.HWSURFACE | pygame.DOUBLEBUF)
         pygame.display.set_caption(f'Loading {self.file_name}...')
+
+    def select(self, options, title="Choose a file"):
+        return terminal_select(options, title)
 
     def show(self, image: PIL.Image.Image, image_index: int):
         if image != self._curr_image:

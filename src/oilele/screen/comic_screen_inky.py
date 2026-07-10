@@ -1,10 +1,11 @@
 import threading
 import time
+from pathlib import Path
 
 import attr
 import inky
 from gpiozero import Button
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 from .comic_screen import ComicScreen
 
@@ -105,3 +106,63 @@ class ComicScreenInky(ComicScreen):
             except Exception as e:
                 self._log.exception(f'failed to attach button {label} (GPIO{pin}): {e}')
         self.main_loop_base()
+
+    def _render_menu(self, options, index, title):
+        """Draw the option list (with the current row marked) to the panel.
+
+        Note: a full e-ink refresh is slow (tens of seconds), so each up/down
+        move repaints the whole panel — usable for a short list, not snappy.
+        """
+        width, height = self.inky.resolution
+        image = Image.new('RGB', (width, height), (255, 255, 255))
+        draw = ImageDraw.Draw(image)
+        try:
+            font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', max(18, height // 30))
+        except OSError:
+            font = ImageFont.load_default()
+        line_h = getattr(font, 'size', 16) + 12
+        draw.text((20, 10), f'{title}  (A/B move, C open, D cancel)', fill=(0, 0, 0), font=font)
+        # window the visible rows around the current selection
+        rows = max(1, (height - 3 * line_h) // line_h)
+        start = max(0, min(index - rows // 2, len(options) - rows))
+        top = 10 + 2 * line_h
+        for offset, option in enumerate(options[start:start + rows]):
+            i = start + offset
+            marker = '> ' if i == index else '   '
+            draw.text((20, top + offset * line_h), f'{marker}{Path(option).name}', fill=(0, 0, 0), font=font)
+        self.inky.set_image(image)
+        self.inky.show()
+
+    def select(self, options, title='Choose a file'):
+        if not options:
+            return None
+        self._sel_index = 0
+        self._sel_result = None
+        done = threading.Event()
+
+        def on_press(label):
+            if label == 'A':
+                self._sel_index = (self._sel_index - 1) % len(options)
+                self._render_menu(options, self._sel_index, title)
+            elif label == 'B':
+                self._sel_index = (self._sel_index + 1) % len(options)
+                self._render_menu(options, self._sel_index, title)
+            elif label == 'C':
+                self._sel_result = options[self._sel_index]
+                done.set()
+            elif label == 'D':
+                self._sel_result = None
+                done.set()
+
+        self._render_menu(options, self._sel_index, title)
+        buttons = []
+        for pin, label in zip(self.BUTTONS, self.LABELS):
+            button = Button(pin, pull_up=True)
+            button.when_pressed = lambda lbl=label: on_press(lbl)
+            buttons.append(button)
+        try:
+            done.wait()
+        finally:
+            for button in buttons:
+                button.close()
+        return self._sel_result
