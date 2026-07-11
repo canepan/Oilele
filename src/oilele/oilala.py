@@ -2,6 +2,8 @@ import os
 import shutil
 import sys
 import typing
+from pathlib import Path
+
 from oilele.lib.parse_args import LoggingArgumentParser as ArgumentParser
 
 try:
@@ -171,34 +173,50 @@ def images_from_archive(file_name: str, log) -> OilalaImages:
     return OilalaImages(list(), log, file_name=file_name)  # type: ignore
 
 
+COMIC_EXTS = {'.pdf', '.cbz', '.cbr', '.zip', '.rar'}
+
+
+def _comic_files(directory: str) -> list:
+    return sorted(str(p) for p in Path(directory).rglob('*') if p.suffix.lower() in COMIC_EXTS)
+
+
+def _make_screen(cfg, images_count: int, file_name: str):
+    for k, m in SCREENS.items():
+        if getattr(cfg, k, False):
+            extra_args = {key: getattr(cfg, key) for key in m.extra_options if getattr(cfg, key, None) is not None}
+            return m(images_count=images_count, file_name=file_name, log=cfg.log, **extra_args)
+    return ComicScreenPygame(images_count=images_count, file_name=file_name, log=cfg.log)
+
+
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
     cfg = parse_args(argv)
 
-    try:
-        pdf_info = pdf2image.pdfinfo_from_path(cfg.filein)
-        cfg.log.debug(f'pdf_info: {pdf_info}')
-        rotate = pdf_info.get('Page rot')
-        pdf_images = pdf2image.convert_from_path(cfg.filein)
-        images = OilalaImages(pdf_images, log=cfg.log, file_name=cfg.filein, rotate=rotate)
-    except pdf2image.exceptions.PDFPageCountError as e:
-        cfg.log.debug(e)
+    if os.path.isdir(cfg.filein):
+        files = _comic_files(cfg.filein)
+        if not files:
+            cfg.log.error(f'No comic files found in {cfg.filein}')
+            return 1
+        # Build the screen first (no file yet), let it pick one, then load it.
+        screen = _make_screen(cfg, images_count=0, file_name=cfg.filein)
+        chosen = screen.select(files, title=cfg.filein)
+        if not chosen:
+            return 0
+        images = images_from_archive(chosen, cfg.log)
+        screen.images_count = len(images.images)
+        screen.file_name = os.path.basename(chosen)
+    else:
         images = images_from_archive(cfg.filein, cfg.log)
-        # images = OilalaImages(pyg_images, cfg.log, file_name=cfg.filein)
-    screen = None
-    for k, m in SCREENS.items():
-        if getattr(cfg, k, False):
-            extra_args = {}
-            for key in m.extra_options:
-                if getattr(cfg, key, None) is not None:
-                    extra_args[key] = getattr(cfg, key)
-            screen = m(images_count=len(images.images), file_name=cfg.filein, log=cfg.log, **extra_args)
-    if screen is None:
-        screen = ComicScreenPygame(images_count=len(images.images), file_name=cfg.filein, log=cfg.log)
+        screen = _make_screen(cfg, len(images.images), cfg.filein)
+
+    if not images.images:
+        cfg.log.error(f'No images found in {cfg.filein}')
+        return 1
 
     mgr = ComicManager(screen, images, cfg.log, start_page=cfg.page)
     screen.main_loop(mgr)
+    return 0
 
 
 if __name__ == '__main__':
